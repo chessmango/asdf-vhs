@@ -48,15 +48,22 @@ install_version() {
   local install_type="$1"
   local version="$2"
   local install_path="$3"
+  local tool_cmd
+  tool_cmd="$(echo "$TOOL_TEST" | cut -d' ' -f1)"
 
   if [ "$install_type" != "version" ]; then
     fail "asdf-$TOOL_NAME supports release installs only"
   fi
 
-  (
-    local tool_cmd
-    tool_cmd="$(echo "$TOOL_TEST" | cut -d' ' -f1)"
+  # Check if a directory matching ${tool_cmd}_${version}_$(get_platform)_$(get_arch) exists in the $ASDF_DOWNLOAD_PATH.
+  # This addresses a change made by Charmbracelet to the way vhs is packaged.
+  # If there is, update the ASDF_DOWNLOAD_PATH to that directory.
+  # See https://github.com/charmbracelet/meta/pull/140 for more info.
+  if [ -d "$ASDF_DOWNLOAD_PATH"/"${tool_cmd}_${version}_$(get_platform)_$(get_arch)" ]; then
+    ASDF_DOWNLOAD_PATH="$ASDF_DOWNLOAD_PATH"/"${tool_cmd}_${version}_$(get_platform)_$(get_arch)"
+  fi
 
+  (
     mkdir -p "$install_path"/bin
     cp "$ASDF_DOWNLOAD_PATH"/"$tool_cmd" "$install_path"/bin
 
